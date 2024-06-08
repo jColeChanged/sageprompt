@@ -1,6 +1,25 @@
-(ns gen-dataset.prompts 
+(ns gen-dataset.prompts
   "Module for loading prompt content from disk with caching functionality."
   (:require [clojure.java.io :as io]))
+
+(defn- fs-health?
+  []
+  (try
+    (let [health-file "health-check.txt"
+          content "health-check"]
+      (spit health-file content)
+      (let [loaded-content (slurp health-file)]
+        (spit health-file "")
+        (= content loaded-content)))
+    (catch Exception e
+      false)))
+
+(defn health
+  "Returns a health check map for the module."
+  []
+  (let [fs-health (fs-health?)]
+    {:healthy fs-health
+     :checks {:fs fs-health}}))
 
 (defn load-prompt-content-from-disk-non-caching
   "Loads a prompt's content from the disk.
@@ -20,7 +39,7 @@
   (with-open [r (io/reader filepath)]
     (slurp r)))
 
-(def load-prompt-content-from-disk-caching 
+(def load-prompt-content-from-disk-caching
   "Loads a prompt's content from the either cache or disk.  Caches the prompt when loading.
    
     Args:
