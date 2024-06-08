@@ -6,7 +6,7 @@
             [clojure.test.check.properties :as prop]
             [clojure.test.check.clojure-test :refer [defspec]]))
 
-
+;; Setup and teardown code.
 (def test-filename "test-prompt.txt")
 (def test-content "This is a test prompt.")
 
@@ -19,6 +19,9 @@
 
 (use-fixtures :each with-test-file)
 
+
+;; Simple unit tests for common behavior.
+
 (deftest test-load-prompt-content-from-disk-non-caching
   (testing "load-prompt-content-from-disk-non-caching function"
     (is (= test-content (load-prompt-content-from-disk-non-caching test-filename)))))
@@ -27,6 +30,15 @@
   (testing "load-prompt function with caching"
     (is (= test-content (load-prompt-content test-filename)))
     (is (= test-content (load-prompt-content test-filename)))))
+
+(deftest test-load-caching-behavior
+  (testing "Caching behavior"
+    (is (= test-content (load-prompt-content test-filename)))
+    ;; Modify the file after initial load to test if caching works
+    (spit test-filename "Modified content")
+    (is (= test-content (load-prompt-content test-filename)))))
+
+;; Testing for edge cases.
 
 (deftest test-load-prompt-file-not-found
   (testing "FileNotFoundException for non-existing file"
@@ -63,12 +75,7 @@
       (spit test-filename special-content)
       (is (= special-content (load-prompt-content-from-disk-non-caching test-filename))))))
 
-(deftest test-load-caching-behavior
-  (testing "Caching behavior"
-    (is (= test-content (load-prompt-content test-filename)))
-    ;; Modify the file after initial load to test if caching works
-    (spit test-filename "Modified content")
-    (is (= test-content (load-prompt-content test-filename)))))
+;; Generative testing to catch things that no one thought of.
 
 (defspec test-generative-load-prompt 100
     (prop/for-all
