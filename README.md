@@ -1,6 +1,6 @@
 # gen-dataset
 
-A Clojure library designed to generate prompts for training the Sage
+A Clojure library designed to generate a dataset for training the Sage
 AI that runs in the Guild of the Rose Discord.
 
 ## Usage
