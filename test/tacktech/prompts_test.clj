@@ -1,7 +1,7 @@
-(ns gen-dataset.prompts-test
+(ns tacktech.prompts-test
   (:require [clojure.test :refer [deftest testing is use-fixtures]]
             [clojure.java.io :as io]
-            [gen-dataset.prompts :refer [load-prompt-content-from-disk-non-caching load-prompt-content]]
+            [tacktech.prompts :refer [load-prompt-content-from-disk-non-caching load-prompt-content]]
             [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]
             [clojure.test.check.clojure-test :refer [defspec]]))

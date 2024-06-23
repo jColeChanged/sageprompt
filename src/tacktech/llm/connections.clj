@@ -1,4 +1,4 @@
-(ns gen-dataset.llm.connections
+(ns tacktech.llm.connections
   "Module for interfacing with Large Language Models (LLMs).
    This module provides functions to connect to LLMs using a standardized
    connection specification."

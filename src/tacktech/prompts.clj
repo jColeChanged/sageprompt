@@ -1,4 +1,4 @@
-(ns gen-dataset.prompts
+(ns tacktech.prompts
   "Module for loading prompt content from disk with caching functionality."
   (:require [clojure.java.io :as io]))
 
