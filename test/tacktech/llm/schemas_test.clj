@@ -68,3 +68,36 @@
     (testing "with model name containing slashes"
       (is (= {:provider "openai" :model "gpt-4/test/model"}
              (sut/split-external-model "openai/gpt-4/test/model"))))))
+
+(deftest advanced-split-external-model-tests
+
+  (testing "Extremely long model names"
+    (let [long-model-name (apply str (repeat 10000 "a"))]
+      (is (= {:provider "openai" :model long-model-name}
+             (sut/split-external-model (str "openai/" long-model-name))))))
+
+  (testing "Adversarial inputs"
+    (is (= {:provider "openai" :model "gpt-4\u0000hidden"}
+           (sut/split-external-model "openai/gpt-4\u0000hidden")))
+    (is (= {:provider "openai" :model "gpt-4\n\rnewescape"}
+           (sut/split-external-model "openai/gpt-4\n\rnewescape"))))
+
+  (testing "Circular reference in model name"
+    (is (= {:provider "openai" :model "openai/gpt-4"}
+           (sut/split-external-model "openai/openai/gpt-4"))))
+
+  (testing "Internationalization support"
+    (is (= {:provider "openai" :model "智能模型-1"}
+           (sut/split-external-model "openai/智能模型-1")))
+    (is (= {:provider "yandex" :model "Русская-Модель-1"}
+           (sut/split-external-model "yandex/Русская-Модель-1")))))
+
+(defspec fuzz-test-split-external-model 1000
+  (prop/for-all [s gen/string-ascii]
+                (try
+                  (let [result (sut/split-external-model s)]
+                    (and (map? result)
+                         (contains? result :provider)
+                         (contains? result :model)))
+                  (catch Exception e
+                    false))))
