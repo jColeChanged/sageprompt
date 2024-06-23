@@ -46,7 +46,7 @@
   "Splits an external model string into provider and model name.
    Returns a map with :provider and :model keys."
   [external-model]
-  (let [[provider model] (string/split external-model #"/")]
+  (let [[provider model] (string/split external-model #"/" 2)]
     {:provider provider
      :model model}))
 

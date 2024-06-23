@@ -54,3 +54,17 @@
   (testing "split-external-model works correctly"
     (is (= {:provider "openai" :model "gpt-4"}
            (sut/split-external-model "openai/gpt-4")))))
+
+(deftest split-external-model-test
+  (testing "split-external-model function"
+    (testing "with valid input"
+      (is (= {:provider "openai" :model "gpt-4"}
+             (sut/split-external-model "openai/gpt-4")))
+      (is (= {:provider "anthropic" :model "claude-2"}
+             (sut/split-external-model "anthropic/claude-2")))
+      (is (= {:provider "openai" :model "gpt-3.5-turbo"}
+             (sut/split-external-model "openai/gpt-3.5-turbo"))))
+
+    (testing "with model name containing slashes"
+      (is (= {:provider "openai" :model "gpt-4/test/model"}
+             (sut/split-external-model "openai/gpt-4/test/model"))))))
