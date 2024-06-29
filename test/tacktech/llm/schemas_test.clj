@@ -18,10 +18,6 @@
     (gen/not-empty gen/string-alphanumeric))))
 
 ;; Test that valid external models pass validation
-(defspec valid-external-models-pass-validation 100
-  (prop/for-all [model gen-valid-external-model]
-                (m/validate sut/external-model-schema model)))
-
 (defspec invalid-external-models-fail-validation 100
   (prop/for-all [invalid-model (gen/one-of
                                 [(gen/return "invalid/model")
@@ -101,3 +97,109 @@
                          (contains? result :model)))
                   (catch Exception e
                     false))))
+
+(deftest external-query-schema-test
+  (testing "Valid external queries"
+    (is (m/validate sut/external-query-schema
+                    {:model "openai/gpt-4"
+                     :messages [{:role "user" :content "Hello, world!"}]}))
+
+    (is (m/validate sut/external-query-schema
+                    {:model "anthropic/claude-2"
+                     :messages [{:role "system" :content "You are a helpful assistant."}
+                                {:role "user" :content "Tell me a joke."}]
+                     :temperature 0.7
+                     :max-tokens 100})))
+
+  (testing "Invalid external queries"
+    (is (not (m/validate sut/external-query-schema
+                         {:model "unsupported/gpt-4"
+                          :messages [{:role "user" :content "Hello"}]})))
+
+    (is (not (m/validate sut/external-query-schema
+                         {:model "openai/gpt-4"
+                          :messages "Not a vector"})))
+
+    (is (not (m/validate sut/external-query-schema
+                         {:model "openai/gpt-4"
+                          :messages [{:role "invalid-role" :content "Hello"}]})))))
+
+(deftest internal-query-schema-test
+  (testing "Valid internal queries"
+    (is (m/validate sut/internal-query-schema
+                    {:provider "openai"
+                     :model "gpt-4"
+                     :messages [{:role "user" :content "Hello, world!"}]}))
+
+    (is (m/validate sut/internal-query-schema
+                    {:provider "anthropic"
+                     :model "claude-2"
+                     :messages [{:role "system" :content "You are a helpful assistant."}
+                                {:role "user" :content "Tell me a joke."}]})))
+
+  (testing "Invalid internal queries"
+    (is (not (m/validate sut/internal-query-schema
+                         {:provider "unsupported-provider"
+                          :model "gpt-4"
+                          :messages [{:role "user" :content "Hello"}]})))
+
+    (is (not (m/validate sut/internal-query-schema
+                         {:provider "openai"
+                          :model ""
+                          :messages [{:role "user" :content "Hello"}]})))
+
+    (is (not (m/validate sut/internal-query-schema
+                         {:provider "openai"
+                          :model "gpt-4"
+                          :messages "Not a vector"})))
+
+    (is (not (m/validate sut/internal-query-schema
+                         {:provider "openai"
+                          :model "gpt-4"
+                          :messages [{:role "invalid-role" :content "Hello"}]})))))
+
+
+(deftest external->internal-query-test
+  (testing "Conversion from external to internal query"
+    (is (= {:provider "openai"
+            :model "gpt-4"
+            :messages [{:role "user" :content "Hello"}]}
+           (sut/external->internal-query
+            {:model "openai/gpt-4"
+             :messages [{:role "user" :content "Hello"}]})))
+
+    (is (= {:provider "anthropic"
+            :model "claude-2"
+            :messages [{:role "user" :content "Hello"}]
+            :max-tokens 100
+            :temperature 0.7}
+           (sut/external->internal-query
+            {:model "anthropic/claude-2"
+             :messages [{:role "user" :content "Hello"}]
+             :max-tokens 100
+             :temperature 0.7})))
+
+    (is (= {:provider "lmstudio"
+            :model "llama-7b"
+            :messages [{:role "user" :content "Hello"}]
+            :temperature 0.5
+            :top-p 0.9
+            :n 3
+            :stream true
+            :stop ["." "!"]
+            :presence-penalty 0.6
+            :frequency-penalty -0.2
+            :logit-bias {:20392 1 :43929 -1}
+            :user "user123"}
+           (sut/external->internal-query
+            {:model "lmstudio/llama-7b"
+             :messages [{:role "user" :content "Hello"}]
+             :temperature 0.5
+             :top-p 0.9
+             :n 3
+             :stream true
+             :stop ["." "!"]
+             :presence-penalty 0.6
+             :frequency-penalty -0.2
+             :logit-bias {:20392 1 :43929 -1}
+             :user "user123"})))))

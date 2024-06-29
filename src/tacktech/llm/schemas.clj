@@ -24,22 +24,21 @@
 
 ;; Internal representation
 ;; Internally, we separate the provider and model name for easier processing
-(def provider-schema [:enum supported-providers])
+(def provider-schema [:enum "openai" "anthropic" "lmstudio"])
 (def internal-model-schema [:string {:min 1}])
 
 ;; External representation
 ;; Externally, we maintain the combined format for consistency with other APIs
+(defn valid-model-format? [s]
+  (let [[provider model] (string/split s #"/" 2)]
+    (and (m/validate (m/schema provider-schema) provider)
+         (m/validate (m/schema internal-model-schema) model))))
+
 (def external-model-schema
   [:and
-   string?
+   [:string]
    [:fn
-    {:error/message "Invalid model format. Expected 'provider/model'"}
-    (fn [s]
-      (let [[provider model] (string/split s #"/")]
-        (and (contains? supported-providers provider)
-             (string? model)
-             (not (string/blank? model)))))]
-   [:re #"^[a-zA-Z0-9-]+/[a-zA-Z0-9-]+$"]])
+    {:error/message "Invalid model format. Expected 'provider/model'"} valid-model-format?]])
 
 ;; Function to split external model into provider and model name
 (defn split-external-model
@@ -71,3 +70,49 @@
 ;;
 ;; To generate a valid external model (useful for testing):
 ;;   (mg/generate external-model-schema)
+
+;; Common fields for both external and internal queries
+(def supported-roles #{"system" "user" "assistant"})
+
+(def message-schema
+  [:map
+   [:role [:enum "system" "user" "assistant"]]
+   [:content :string]])
+
+(def messages-schema
+  [:vector message-schema])
+
+;; External query schema
+(def external-query-schema
+  [:map
+   [:model external-model-schema]
+   [:messages messages-schema]])
+
+;; Internal query schema
+(def internal-query-schema
+  [:map
+   [:provider provider-schema]
+   [:model internal-model-schema]
+   [:messages messages-schema]])
+
+;; Function to convert external query to internal query
+(defn external->internal-query
+  "Converts an external query to an internal query by splitting the model field."
+  [external-query]
+  (let [{:keys [model] :as query} external-query
+        {:keys [provider model]} (split-external-model model)]
+    (assoc (dissoc query :model) :provider provider :model model)))
+
+;; Usage examples:
+;; To validate an external query:
+;;   (m/validate external-query-schema external-query)
+;;
+;; To validate an internal query:
+;;   (m/validate internal-query-schema internal-query)
+;;
+;; To convert and validate:
+;;   (let [internal-query (external->internal-query external-query)]
+;;     (m/validate internal-query-schema internal-query))
+;;
+;; To generate a valid external query (useful for testing):
+;;   (mg/generate external-query-schema)
