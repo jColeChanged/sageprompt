@@ -79,11 +79,6 @@
      :model (second parts)}))
 
 
-(defn create-chat-completion
-  [connection-spec session query]
-  (api/create-chat-completion
-   {:model    (:model connection-spec)
-    :messages (:messages query)}
-   {:api-key (:api-key connection-spec)
-    :api-endpoint (:api-endpoint connection-spec)}))
+
+
   
