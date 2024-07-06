@@ -16,4 +16,3 @@
 
 (s/def ::connection-spec
   (s/keys :req-un [::type ::connection-string ::api-key ::user ::model]))
-

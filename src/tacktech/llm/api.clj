@@ -1,17 +1,18 @@
-(ns tacktech.llm.api 
-  (:require [clojure.tools.analyzer.ast.query :as query]
+(ns tacktech.llm.api
+  (:require [tacktech.llm.provider.core :refer [get-provider]]
             [wkok.openai-clojure.api :as api]))
 
 
+(defn internal-create-chat-completion
+  [provider model query]
+  (println provider model query)
+  (let [provider (get-provider provider)]
+    (api/create-chat-completion 
+     (assoc query :model model)
+     provider)))
 
-;; (defn internal-create-chat-completion
-;;   [provider model messages]
 
-;;   (case provider
-;;     "openai" (openai-api/create-chat-completion {:model model :messages messages})
-;;     "anthropic" (anthropic-api/create-chat-completion {:model model :messages messages})
-;;     "lmstudio" (lmstudio-api/create-chat-completion {:model model :messages messages})
-;;     (throw (ex-info "Unsupported provider" {:provider provider}))))
+;;    (api/create-chat-completion {:model model :messages messages})))
 
 
 ;; (defn external-create-chat-completion
