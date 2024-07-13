@@ -6,5 +6,6 @@
   :dependencies [[org.clojure/clojure "1.11.1"]
                  [org.clojure/test.check "1.1.0"]
                  [metosin/malli "0.16.1"]
+                 [com.cnuernber/charred "1.034"]
                  [net.clojars.wkok/openai-clojure "0.18.1"]]
   :repl-options {:init-ns gen-dataset.core})
